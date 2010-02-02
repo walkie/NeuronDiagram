@@ -1,112 +1,176 @@
-{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE ExistentialQuantification,
+             FlexibleInstances,
+             MultiParamTypeClasses,
+             NoMonomorphismRestriction #-}
 
 module Neuron where
 
-type Id   = Int
-type Fire = Bool
-type Solution = [(Id,Fire)]
-
-data EdgeType = Stimulate | Inhibit
-
-data Edge e = 
-  Edge {
-    edgeType :: EdgeType,
-    edgeData :: e,
-    edgeFrom :: Id
-  }
-
-data Neuron n e = forall t. NeuronType t =>
-  Neuron {
-    neuronId   :: Id,
-    neuronType :: t,
-    neuronData :: n,
-    edgesTo    :: [Edge e]
-  }
-
-type Diagram n e = [Neuron n e]
-
-class GraphElem t => NeuronType t where
-  graphvizAttrs :: t -> [Attr]
-  --fire :: [Input] -> t -> Fire
-
-sources :: Diagram n e -> [Neuron n e]
-sources = filter (null . edgesTo)
-
-sourceIds :: Diagram n e -> [Id]
-sourceIds = map neuronId . sources
-
-removeById :: (a -> Id) -> [Id] -> [a] -> [a]
-removeById f ids as = [a | a <- as, f a `notElem` ids]
---removeById f ids = filter (flip notElem ids . f)
-
-removeNeurons :: [Id] -> [Neuron n e] -> [Neuron n e]
-removeNeurons = removeById neuronId
-
-removeEdgesFrom :: [Id] -> [Edge e] -> [Edge e]
-removeEdgesFrom = removeById edgeFrom
-
-fireOrder :: Diagram n e -> [Id]
-fireOrder [] = []
-fireOrder ns = ids ++ fireOrder ns'
-  where ids = sourceIds ns
-        ns' = [ Neuron i t d (removeEdgesFrom ids es)
-              | Neuron i t d es <- removeNeurons ids ns ]
--- below is a bit more extensible way of writing this, but GHC can't handle
--- record notation with ExistentialTypes yet...
---      ns' = [ n { edgesTo = removeEdgesFrom ids (edgesTo n) } 
---            | n <- removeNeurons ids ns ]
-
-data Plain = Plain
-
-instance GraphElem Plain where
-  graphvizAttrs Plain = []
-
-instance NeuronType Plain
-
--------------
--- Example --
--------------
-
-plain i = Neuron i Plain
-stim    = Edge Stimulate ""
-inhib   = Edge Inhibit   ""
-
-poison = plain 1 "poison" []
-poke   = plain 2 "poke"   []
-drink  = plain 3 "drink"  [stim 1,inhib 2]
-thirst = plain 4 "thirst" [stim 2]
-dead   = plain 5 "dead"   [stim 3,stim 4]
-
-desert = [poison,poke,drink,thirst,dead]
-solution = [(1,True),(2,True),(3,False),(4,True),(5,True)] :: Solution
-
---------------------
--- Graphviz stuff --
---------------------
+----------------------
+-- Neurons diagrams --
+----------------------
 
 type Name = String
-data Attr = Name := String
+type Fire = Bool           -- basic binary firing
 
-class GraphvizElem a where
-  showG 
-  graphvizAttrs _ = []
+data Attr = Name := String -- graphviz attribute
 
-instance GraphElem EdgeType where
-  graphvizAttrs Stimulate = []
-  graphvizAttrs Inhibit   = ["arrowhead" := "dot"]
-  
-instance Show Attr where
-  show (n := v) = n ++ "=" ++ v
+class (Show t, GraphElem t, Value a) =>
+      EdgeType t a where
+  evalE :: t -> a -> a          -- t -> source -> target
 
--- This currently ignores node and edge data.  Probably should be adapted to
--- use these instead of ids.
-graphviz :: (Show n, Show e) => Diagram n e -> Solution -> String
-graphviz d s = "digraph{rankdir=LR;node[fixedsize=true,width=1];" -- doesn't scale with labels...
-               ++ concatMap neuron d ++ concatMap edges d ++ "}"
-  where neuron (Neuron i t d _ ) = show i ++ show ("label" := show d : graphvizAttrs t ++ fired i) ++ ";"
-        edges  (Neuron i _ _ es) = concatMap (edge i) es
-        edge d (Edge t _ s)   = show s ++ "->" ++ show d ++ show (graphvizAttrs t) ++ ";"
-        fired i = case lookup i s of
-                    Just True  -> ["style" := "filled", "fillcolor" := "gray"]
-                    Just False -> []
-                    Nothing    -> error ("no solution for node: " ++ show i)
+class (Show t, GraphElem t, Value a) =>
+      NeuronType t a where
+  evalN :: t -> [a] -> [a] -> a -- t -> stims -> inhibs -> result
+
+-- an edge has a function and a source neuron
+data Edge a = forall t. EdgeType t a => 
+              Edge t (Neuron a)
+
+-- first edges are stimulating edges into this node,
+-- second are inhibiting edges into this node
+data Neuron a = forall t. NeuronType t a =>
+                Neuron t Name [Edge a] [Edge a]
+
+eval :: Value a => Neuron a -> a
+eval (Neuron t _ ss is) = evalN t (map eval' ss) (map eval' is)
+  where eval' (Edge t s) = evalE t (eval s)
+
+-----------------------------
+-- Basic neurons and edges --
+-----------------------------
+
+--
+-- A simple value-passing edge.
+--
+
+data Id = Id deriving (Eq, Show)
+instance GraphElem Id where
+  attr _ = []
+instance Value a => EdgeType Id a where
+  evalE _ = id
+
+--
+-- An exogenous neuron.
+--
+
+data Exo a = Exo a deriving (Eq, Show)
+instance GraphElem (Exo a) where
+  attr _ = []
+instance (Show a, Value a) => NeuronType (Exo a) a where
+  evalN (Exo a) _ _ = a
+
+--
+-- A regular neuron.
+--
+
+data Plain = Plain deriving (Eq, Show)
+instance GraphElem Plain where
+  attr _ = []
+instance Value a => NeuronType Plain a where
+  evalN _ ss is = times (sumV ss) (neg (sumV is))
+
+--
+-- A double-thick neuron.
+-- Fires if stimulated by two nonzero edges (and inhibited by none).
+--
+
+data Thick = Thick deriving (Eq, Show)
+instance GraphElem Thick where
+  attr _ = ["penwidth" := "2.0"]
+instance NeuronType Thick Bool where
+  evalN _ ss is | nfire ss > 2 && nfire is == 0 = one
+                | otherwise                     = zero
+
+nfire :: [Fire] -> Int
+nfire = length . filter id
+
+--
+-- A neuron that fires if it is stimulated more than inhibited.
+--   (TODO: Probably not generalized right to non-booleans. Needs compare...)
+--
+
+data Balance = Balance deriving (Eq, Show)
+instance GraphElem Balance where
+  attr _ = ["style" := "dotted"]  -- to match Hitchcock '09
+instance NeuronType Balance Bool where
+  evalN _ ss is | nfire ss > nfire is = one
+                | otherwise           = zero
+
+
+-- Smart constructors
+
+edge :: Value a => Neuron a -> Edge a
+edge = Edge Id
+
+neuron :: (Show a, Value a, NeuronType t a) =>
+          t -> Name -> [Neuron a] -> [Neuron a] -> Neuron a
+neuron t n ss is = Neuron t n (map edge ss) (map edge is)
+
+source :: (Show a, Value a) => Name -> a -> Neuron a
+source n a = Neuron (Exo a) n [] []
+
+plain   = neuron Plain
+thick   = neuron Thick
+balance = neuron Balance
+
+------------
+-- Values --
+------------
+
+class Eq a => Value a where
+  zero  :: a
+  one   :: a
+  plus  :: a -> a -> a
+  times :: a -> a -> a
+  neg   :: a -> a
+
+instance Value Bool where
+  zero  = False
+  one   = True
+  plus  = (||)
+  times = (&&)
+  neg   = not
+
+sumV :: Value a => [a] -> a
+sumV = foldr plus zero
+
+productV :: Value a => [a] -> a
+productV = foldr times one
+
+--------------------
+-- Show instances --
+--------------------
+
+instance Show (Edge a) where
+  show (Edge t s) = "Edge (" ++ show t ++ ") " ++ show s
+
+instance Show (Neuron a) where
+  show (Neuron t n ss is) = "Neuron (" ++ show t ++ ") " ++ show n ++ " " ++ show ss ++ " " ++ show is
+
+--------------------
+-- GraphViz stuff --
+--------------------
+
+-- There is a Graphviz library on Hackage...
+-- Could switch to that, but probably overkill.
+
+class GraphElem a where
+  attr :: a -> [Attr]
+
+instance GraphElem Bool where
+  attr True = ["style" := "filled", "fillcolor" := "gray"]
+  attr _    = []
+
+--graphvizN :: GraphElem a => Neuron a -> String
+--graphvizN (Neuron t n _ _) = n ++ show 
+
+
+--------------
+-- Examples --
+--------------
+
+poison = source "poison" True
+poke   = source "poke"   True
+drink  = plain  "drink"  [poison]       [poke]
+thirst = plain  "thirst" [poke]         []
+dead   = plain  "dead"   [drink,thirst] []
