@@ -5,8 +5,9 @@
 
 module Neuron where
 
-import Data.List (nubBy,partition)
-import System    (system)
+import Data.List  (find,nubBy,partition)
+import Data.Maybe (fromJust)
+import System     (system)
 
 
 ----------------------
@@ -200,14 +201,22 @@ instance GraphElem Inhib where
   attr _ = ["arrowhead" := "dot"]
 
 -- neurons
+width = "width" := "1" -- doesn't scale with label lengths, but looks better usually...
+shape = "shape" := "ellipse"
 instance GraphElem (Exo a) where
-  attr _ = []
+  attr _ = [width,shape]
 instance GraphElem Endo where
-  attr _ = []
+  attr _ = [width,shape]
 instance GraphElem Thick where
-  attr _ = ["penwidth" := "2.0"]
+  attr _ = [width,shape,"penwidth" := "2.0"]
 instance GraphElem Elect where
-  attr _ = ["style" := "dotted"]  -- to match Hitchcock '09
+  attr _ = [width,shape,"style" := "dotted"]  -- to match Hitchcock '09
+
+label :: Name -> Attr
+label n = "label" := n
+
+type Id = Int
+type IdMap = [(Name,Id)]
 
 -- edges currently can't vary their appearance depending on their value
 graphvizE :: GraphElem a => Name -> Edge a -> String
@@ -218,8 +227,7 @@ graphvizN n@(Neuron t i es) = i ++ show (attr (eval n) ++ attr t) ++ ";"
                               ++ concatMap (graphvizE i) es
 
 graphviz :: GraphElem a => Neuron a -> String
-graphviz n = "digraph{rankdir=LR;node[fixedsize=true,width=1];" -- doesn't scale with labels...
-             ++ concatMap graphvizN (flowsTo n) ++ "}"
+graphviz n = "digraph{rankdir=LR;" ++ concatMap graphvizN (flowsTo n) ++ "}"
 
 view :: GraphElem a => Neuron a -> IO ()
 view n = writeFile "view.dot" (graphviz n) >> system "open view.dot" >> return ()
@@ -242,3 +250,14 @@ boulder x = live
         duck    = endo "duck"    [boulder] []
         crush   = endo "crush"   [boulder] [duck]
         live    = endo "live"    [alive]   [crush]
+
+xor vs as = result
+  where result   = endo "result" (map switch vs) []
+        switch v = endo (v++"_") [vexo v]        [vexo w | w <- vs, v /= w]
+        vexo v   = (fromJust . find ((==v) . name)) (zipWith exo vs as)
+
+-- Or=[A:False] & ~[B:False]
+anotb x y = or
+  where a  = exo  "A"  x
+        b  = exo  "B"  y
+        or = endo "Or" [a] [b]
