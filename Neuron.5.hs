@@ -317,8 +317,19 @@ newtype Causes a = Causes [Cause a] -- disjunction of causes
 data Arg a = Arg Name a
   deriving Eq
 
+-- argument record
+type Args = [Arg a]
+
+newtype Cause a = Cause [Cond a]
+
+argName :: Arg a -> Name
+argName (Arg n _) = n
+
+argVal :: Arg a -> a
+argVal (Arg _ a) = a
+
 instance Show a => Show (Arg a) where
-  show (Arg n a) = show
+  show (Arg n a) = show n ++ ":" ++ show a
 
 
 
