@@ -52,7 +52,7 @@ instance NT XOR Bool where
 data Thick a = Thick Int [N a]
 
 instance NT Thick Bool where
-  fire  (Thick n _)  = Fire ((>n) . count)
+  fire  (Thick n _)  = Fire ((>=n) . count)
   preds (Thick _ ps) = ps
   nodeAttrs _        = [("penwidth","3")]
 
@@ -104,6 +104,16 @@ fireD t n c d as = case fire t of
 -- Neuron Value Instances --
 ----------------------------
 
+instance Bounded a => Bounded (Maybe a) where
+  minBound = Nothing
+  maxBound = Just maxBound
+
+instance Enum a => Enum (Maybe a) where
+  toEnum 0 = Nothing
+  toEnum i = Just (toEnum (i-1))
+  fromEnum Nothing  = 0
+  fromEnum (Just a) = fromEnum a + 1
+  
 instance NV a => NV (Maybe a) where
   showVal  (Just a) = showVal a
   showVal  Nothing  = "N/A"
