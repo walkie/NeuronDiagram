@@ -47,9 +47,10 @@ class NT t a where
   edgeAttrs t = [[] | _ <- preds t]
 
 -- neuron values
-class NV a where
+class (Bounded a, Enum a, Eq a) => NV a where
   showVal  :: a -> String
   valAttrs :: a -> [Attr]
+  --labelFun :: a -> String -> String
 
 instance NT N a where
   fire  (_ :> t) = fire t
@@ -61,6 +62,10 @@ instance NT N a where
 -- neuron name
 name :: N a -> Name
 name (n :> _) = n
+
+-- is the neuron named n?
+isNamed :: Name -> N a -> Bool
+isNamed n = (n==) . name
 
 -- is action?
 isAct :: N a -> Bool

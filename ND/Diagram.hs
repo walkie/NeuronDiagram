@@ -2,7 +2,7 @@
 -- This module contains the definitions of neuron graphs and diagrams.
 module ND.Diagram where
 
-import Data.List (nub)
+import Data.List (find,nub)
 
 import ND.Neuron
 
@@ -18,6 +18,12 @@ newtype G a = G [N a]
 -- all neurons in a graph
 neurons :: G a -> [N a]
 neurons (G ns) = nub (ns ++ concatMap upstream ns)
+
+-- find a neuron by name in a graph
+findNeuron :: G a -> Name -> N a
+findNeuron g n = case find (isNamed n) (neurons g) of
+                   Just n  -> n
+                   Nothing -> error $ "findNeuron: No neuron named: " ++ n
 
 -- all sink neurons
 sinks :: G a -> [N a]
@@ -64,11 +70,15 @@ sinksD = sinks . graph
 sourcesD :: D a -> [N a]
 sourcesD = sources . graph
 
+-- all neuron values
+allVals :: NV a => [a]
+allVals = [minBound .. maxBound]
+
 -- all inputs of a given length
-allIns :: (Bounded a, Enum a) => Int -> [[a]]
+allIns :: NV a => Int -> [[a]]
 allIns 0 = [[]]
-allIns n = [h:t | h <- [minBound .. maxBound], t <- allIns (n-1)]
+allIns n = [h:t | h <- allVals, t <- allIns (n-1)]
 
 -- all diagrams for a given graph
-allDs :: (Bounded a, Enum a) => G a -> [D a]
+allDs :: NV a => G a -> [D a]
 allDs g = map (D g) ((allIns . length . inputs) g)
