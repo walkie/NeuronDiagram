@@ -3,7 +3,7 @@ module ND.BoolRel where
 
 import Data.Function (on)
 import Data.Monoid
-import Data.List (intersperse,nub,sort)
+import Data.List
 
 
 -----------------------
@@ -34,7 +34,7 @@ onList2 f = fromList2 . f . toList2
 
 -- (set) equality of two expressions
 relEq :: (Rel r, Ord a) => r a -> r a -> Bool
-relEq = (==) `on` (sort . nub . toList)
+relEq = (==) `on` (toList . simplify)
 
 -- exploit associativity to remove a relation nesting
 assoc :: Rel r => r (r a) -> r a
@@ -48,8 +48,20 @@ dist = fromList2 . dist' . toList2
         dist' (xs:xss) = [y:ys | y <- xs, ys <- dist' xss]
 
 -- flatten a nested DC expression
+-- (the below more general type looks complicated and is probably not needed)
+--flatten :: (Rel r, Rel s) => r (s (r (s a))) -> r (s a)
 flatten :: DC (DC a) -> DC a
 flatten = fmap assoc . assoc . fmap dist
+
+-- remove redundant terms from an expression
+simplify :: (Rel r, Ord a) => r a -> r a
+simplify = onList (sort . nub)
+
+-- remove redundant terms from nested expressions
+simplify2 :: (Rel r, Rel s, Ord a) => r (s a) -> r (s a)
+simplify2 = onList2 (nubBy subset . sort) . fmap simplify
+  where sort = sortBy (compare `on` length)
+        subset x y = x == z || y == z where z = intersect x y
 
 
 ---------------
@@ -70,6 +82,9 @@ instance Functor Con where
   fmap f (Con as) = Con (map f as)
 instance Functor Dis where
   fmap f (Dis as) = Dis (map f as)
+
+fmap2 :: (Functor f, Functor g) => (a -> b) -> f (g a) -> f (g b)
+fmap2 = fmap . fmap
 
 instance Monad Con where
   return a     = Con [a]

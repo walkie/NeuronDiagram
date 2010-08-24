@@ -39,11 +39,15 @@ evalD :: D a -> [a]
 evalD d = map (evalN d) (sinksD d)
 
 -- firing function for a graph
-evalG :: G a -> [a] -> [a]
-evalG g = evalD . D g
+eval :: G a -> [a] -> [a]
+eval g = evalD . D g
+
+-- firing function for each sink in a graph
+evals :: G a -> [[a] -> a]
+evals g = map e [0 .. length (sinks g) - 1]
+  where e i as = eval g as !! i
 
 -- firing function for a particular sink
 evalSink :: G a -> Name -> [a] -> a
-evalSink g n as = case findIndex (isNamed n) (sinks g) of
-                    Just i  -> evalG g as !! i
-                    Nothing -> error $ "evalSink: No sink named: " ++ n
+evalSink g n as = maybe err (eval g as !!) $ findIndex (isNamed n) (sinks g)
+  where err = error $ "evalSink: No sink named: " ++ n

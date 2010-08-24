@@ -38,3 +38,5 @@ twoDocs = diagram [dead] [False,False]
         cure = "Cure" :> Thick 2 [docA,docB]
         sick = "Sick" :> Const True
         dead = "Dead" :> Stim [sick] `Inhib` [cure] 
+
+test = "Test" :> Const True `Inhib` ["Thick" :> Thick 2 ["A":>Input,"B":>Input]]
