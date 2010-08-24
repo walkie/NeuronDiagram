@@ -17,9 +17,9 @@ desert = diagram [dead] [True,True]
 boulder = diagram [live] [True]
   where boulder = "Boulder" :> Input
         health  = "Health"  :> Const True
-        duck    = "Duck"    :> Stim [boulder]
-        crush   = "Crush"   :> Stim [boulder] `Inhib` [duck]
-        live    = "Live"    :> Stim [health]  `Inhib` [crush]
+        duck    = "Duck"    :> Stim [boulder] `IsKind` Act
+        crush   = "Crush"   :> Stim [boulder] `Inhib`  [duck]
+        live    = "Live"    :> Stim [health]  `Inhib`  [crush]
 
 -- assassin-guard problem
 assassin = diagram [live] [True]

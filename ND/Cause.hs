@@ -18,7 +18,7 @@ import ND.BoolRel
 
 -- argument
 data Arg a = Arg Name a
-  deriving Eq
+  deriving (Eq,Ord)
 
 -- argument record
 type Rec a = [Arg a]
@@ -104,10 +104,19 @@ basic = filter ((==1) . length . toList) . counter
 -- Causal Flow --
 -----------------
 
--- immediate counterfactual cause of a neuron
+-- immediate (local) counterfactual cause of a neuron
+local :: NV a => D a -> N a -> Cause a
+local d n | isAct n   = fromList2 [[arg d (name n)]] -- stop recursing on action
+          | otherwise = cfdToCause d (law (fire n))
+  where law (Fire f) = mcfd f [arg d (name p) | p <- preds n]
+        law In       = fromList2 [[]]
 
+-- ultimate cause of a neuron by causal flow
+flow :: (NV a, Ord a) => D a -> N a -> Cause a
+flow d n = (simplify2 . flatten) (fmap2 expand (local d n))
+  where expand a@(Arg m _) | m == name n = fromList2 [[a]]
+                           | otherwise   = flow d (findNeuron (graph d) m)
 
-
---
--- helper functions
---
+-- causal semantics
+sem :: (NV a, Ord a) => D a -> [Cause a]
+sem d = map (flow d) (sinksD d)

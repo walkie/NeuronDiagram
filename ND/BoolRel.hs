@@ -43,7 +43,7 @@ assoc = onList (concatMap toList)
 -- exploit distiributivity to swap the nesting of relations
 dist :: (Rel r, Rel s) => r (s a) -> s (r a)
 dist = fromList2 . dist' . toList2
-  where dist' []       = []
+  where dist' []       = [[]]
         dist' [xs]     = [[y]  | y <- xs]
         dist' (xs:xss) = [y:ys | y <- xs, ys <- dist' xss]
 
