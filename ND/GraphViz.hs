@@ -2,10 +2,7 @@
 module ND.GraphViz where
 
 import Data.List (intersperse)
-import System    (system)
-
-import Prelude hiding (writeFile)
-import System.IO.UTF8 (writeFile)
+import System (system)
 
 import ND.Neuron
 import ND.NeuronTypes
