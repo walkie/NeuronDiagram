@@ -106,8 +106,8 @@ basic = filter ((==1) . length . toList) . counter
 
 -- immediate (local) counterfactual cause of a neuron
 local :: NV a => D a -> N a -> Cause a
-local d n | isAct n   = fromList2 [[arg d (name n)]] -- stop recursing on action
-          | otherwise = cfdToCause d (law (fire n))
+local d n | isAct n   = fromList2 [[arg d (name n)]] -- actions are their own cause
+          | otherwise = cfdToCause d (law (fire n))  -- laws are determined through CF reasoning
   where law (Fire f) = mcfd f [arg d (name p) | p <- preds n]
         law In       = fromList2 [[]]
 
