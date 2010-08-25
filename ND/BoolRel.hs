@@ -102,9 +102,9 @@ parens s = "(" ++ s ++ ")"
 sepBy :: (Show a, Rel r) => String -> r a -> String
 sepBy s = concat . intersperse s . map show . toList
 
--- These Show instances look nice for DC expressions, but could be confusing
--- in other contexts.  Uncomment the parens functions for a more explicit
--- representation.
+-- These Show instances look nice for DC expressions, but are confusing for
+-- other relation nestings.  Uncomment the parens functions for a more
+-- explicit representation.
 instance Show a => Show (Con a) where
   show = {- parens . -} sepBy "^"
 instance Show a => Show (Dis a) where
