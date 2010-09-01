@@ -51,7 +51,7 @@ arg :: D a -> Name -> Arg a
 arg d n = Arg n $ evalN d (findNeuron (graph d) n)
 
 instance NV a => Show (Arg a) where
-  show (Arg n a) = n ++ ":" ++ showVal a
+  show (Arg n a) = n ++ ":" ++ show a--showVal a
 
 
 ------------------------------
@@ -118,5 +118,10 @@ flow d n = (simplify2 . flatten) (fmap2 expand (local d n))
                            | otherwise   = flow d (findNeuron (graph d) m)
 
 -- causal semantics
-sem :: (NV a, Ord a) => D a -> [Cause a]
-sem d = map (flow d) (sinksD d)
+csem :: (NV a, Ord a) => D a -> [Cause a]
+csem d = map (flow d) (sinksD d)
+
+-- print the causal semantics in a nice way
+causes :: (NV a, Ord a) => D a -> IO ()
+causes d = mapM_ putStr $ zipWith cause (csem d) (sinksD d)
+  where cause c n = show c ++ " ~> " ++ show (Arg (name n) (evalN d n)) ++ "\n"

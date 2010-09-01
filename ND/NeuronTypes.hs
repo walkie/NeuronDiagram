@@ -35,7 +35,7 @@ data Stim a = Stim [N a]
   deriving (Eq,Show)
 
 instance NT Stim Bool where
-  fire  _        = Fire or
+  fire  _         = Fire or
   preds (Stim ps) = ps
 
 
@@ -74,7 +74,8 @@ instance NT t a => NT (IsKind t) a where
   fire  (IsKind t _) = fire t
   kind  (IsKind _ k) = k
   preds (IsKind t _) = preds t
-
+  edgeAttrs (IsKind t _) = edgeAttrs t
+  nodeAttrs (IsKind t _) = nodeAttrs t
 
 -- inhibiting edges decorator
 data Inhib t a = Inhib (t a) [N a]
@@ -84,7 +85,8 @@ instance NT t Bool => NT (Inhib t) Bool where
   fire  (Inhib t is) = Fire $ fireD t (length is) (&&) (all not)
   kind  (Inhib t _ ) = kind t
   preds (Inhib t is) = preds t ++ is
-  edgeAttrs (Inhib t is) = edgeAttrs t ++ [[("arrowhead","dot")]]
+  edgeAttrs (Inhib t _) = edgeAttrs t ++ [[("arrowhead","dot")]]
+  nodeAttrs (Inhib t _) = nodeAttrs t
 
 
 -- helper function for defining decorators that modify the firing function
@@ -93,7 +95,7 @@ instance NT t Bool => NT (Inhib t) Bool where
 --   c: function for combining results of (fire t) and g
 --   d: function to execute on this decorator's inputs
 --   as: input to firing function
-fireD :: NT t a => t a -> Int -> (a -> a -> a) -> ([a] -> a) -> [a] -> a
+fireD :: NT t a => t a -> Int -> (a -> b -> a) -> ([a] -> b) -> [a] -> a
 fireD t n c d as = case fire t of
                      Fire f -> c (f bs) (d (take n cs))
                      _ -> error "Cannot modify input neuron function!"
@@ -115,13 +117,13 @@ instance Enum a => Enum (Maybe a) where
   fromEnum (Just a) = fromEnum a + 1
   
 instance NV a => NV (Maybe a) where
-  showVal  (Just a) = showVal a
-  showVal  Nothing  = "N/A"
+  --showVal  (Just a) = showVal a
+  --showVal  Nothing  = "N/A"
   valAttrs (Just a) = valAttrs a
   valAttrs Nothing  = [("style","dashed")]
 
 instance NV Bool where
-  showVal  True  = "T"
-  showVal  False = "F"
-  valAttrs True  = [("style","filled"),("fillcolor","gray")]
+  --showVal  True  = "T"
+  --showVal  False = "F"
+  valAttrs True  = fillWith "gray"
   valAttrs False = []

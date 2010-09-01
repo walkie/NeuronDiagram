@@ -47,10 +47,15 @@ class NT t a where
   edgeAttrs t = [[] | _ <- preds t]
 
 -- neuron values
-class (Bounded a, Enum a, Eq a) => NV a where
-  showVal  :: a -> String
+class (Bounded a, Enum a, Eq a, Show a) => NV a where
+  --showVal  :: a -> String
   valAttrs :: a -> [Attr]
   --labelFun :: a -> String -> String
+
+-- helper function for constructing attributes that fill a graphviz
+-- node with color
+fillWith :: String -> [Attr]
+fillWith c = [("style","filled"),("fillcolor",c)]
 
 instance NT N a where
   fire  (_ :< t) = fire t
