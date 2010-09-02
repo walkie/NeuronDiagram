@@ -124,4 +124,4 @@ csem d = map (flow d) (sinksD d)
 -- print the causal semantics in a nice way
 causes :: (NV a, Ord a) => D a -> IO ()
 causes d = mapM_ putStr $ zipWith cause (csem d) (sinksD d)
-  where cause c n = show c ++ " ~> " ++ show (Arg (name n) (evalN d n)) ++ "\n"
+  where cause c n = show c ++ " ==> " ++ show (Arg (name n) (evalN d n)) ++ "\n"

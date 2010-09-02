@@ -51,3 +51,6 @@ evals g = map e [0 .. length (sinks g) - 1]
 evalSink :: G a -> Name -> [a] -> a
 evalSink g n as = maybe err (eval g as !!) $ findIndex (isNamed n) (sinks g)
   where err = error $ "evalSink: No sink named: " ++ n
+
+fireSem :: NV a => G a -> [([a],[a])]
+fireSem g = [(as, eval g as) | as <- allInsFor g]

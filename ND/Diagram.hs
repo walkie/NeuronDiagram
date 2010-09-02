@@ -79,6 +79,9 @@ allIns :: NV a => Int -> [[a]]
 allIns 0 = [[]]
 allIns n = [h:t | h <- allVals, t <- allIns (n-1)]
 
+allInsFor :: NV a => G a -> [[a]]
+allInsFor = allIns . length . inputs
+
 -- all diagrams for a given graph
 allDs :: NV a => G a -> [D a]
-allDs g = map (D g) ((allIns . length . inputs) g)
+allDs g = map (D g) (allInsFor g)

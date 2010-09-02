@@ -16,6 +16,9 @@ orders = diagram [pvt] [False,True]
         maj = "Maj" :< Input
         pvt = "Pvt" :< Stim [gen,maj]
 
+-- same as "orders", but both officers issue the order
+both = D (graph orders) [True,True]
+
 -- if given, general's charge order trumps major's charge order
 -- same firing semantics, but different causal semantics
 trump = diagram [pvt] [True,True]

@@ -65,24 +65,24 @@ gvD (D g i) = gvG' (idMap g) g (Just . evalN' (inMap g i))
 -- system stuff: writing files, popping up a graphviz window
 --
 
-write :: FilePath -> (a -> GV) -> a -> IO ()
-write p f a = writeFile p (f a)
+write' :: FilePath -> (a -> GV) -> a -> IO ()
+write' p f a = writeFile p (f a)
 
-view :: (a -> GV) -> a -> IO ()
-view f a = write "view.dot" f a >> system "open view.dot" >> return ()
+view' :: (a -> GV) -> a -> IO ()
+view' f a = write' "view.dot" f a >> system "open view.dot" >> return ()
 
 -- write a graphviz file for a graph
 writeG :: NV a => FilePath -> G a -> IO ()
-writeG = flip write gvG
+writeG = flip write' gvG
 
 -- write a graphviz file for a diagram
-writeD :: NV a => FilePath -> D a -> IO ()
-writeD = flip write gvD
+write :: NV a => FilePath -> D a -> IO ()
+write = flip write' gvD
 
 -- pop up a graphviz view of a graph
 viewG :: NV a => G a -> IO ()
-viewG = view gvG
+viewG = view' gvG
 
 -- pop up a graphviz view of a diagram
-viewD :: NV a => D a -> IO ()
-viewD = view gvD
+view :: NV a => D a -> IO ()
+view = view' gvD
