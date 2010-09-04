@@ -11,29 +11,29 @@ import ND
 -- based on example beginning on SE p. 874
 
 -- private will charge if either superior orders him to
-orders = diagram [pvt] [False,True]
-  where gen = "Gen" :< Input
-        maj = "Maj" :< Input
-        pvt = "Pvt" :< Stim [gen,maj]
+major = diagram [pvt] [False,True]
+  where gen = "Gen" :<- Input
+        maj = "Maj" :<- Input
+        pvt = "Pvt" :<- Stim [gen,maj]
 
 -- same as "orders", but both officers issue the order
-both = D (graph orders) [True,True]
+both = major `withInputs` [True,True]
 
 -- if given, general's charge order trumps major's charge order
 -- same firing semantics, but different causal semantics
 trump = diagram [pvt] [True,True]
-  where gen  = "Gen"  :< Input
-        maj  = "Maj"  :< Input
-        majE = "MajE" :< Stim [maj] `Inhib` [gen]
-        pvt  = "Pvt"  :< Stim [gen,majE]
+  where gen  = "Gen"  :<- Input
+        maj  = "Maj"  :<- Input
+        majE = "MajE" :<- Stim [maj] `Inhib` [gen]
+        pvt  = "Pvt"  :<- Stim [gen,majE]
 
 -- incorporate retreat orders
 -- exactly the same as charge2 except the type annotation!
 retreat = diagram [pvt] [Charge,Retreat]
-  where gen  = "Gen"  :< Input
-        maj  = "Maj"  :< Input
-        majE = "MajE" :< Stim [maj] `Inhib` [gen]
-        pvt  = "Pvt"  :< Stim [gen,majE]
+  where gen  = "Gen"  :<- Input
+        maj  = "Maj"  :<- Input
+        majE = "MajE" :<- Stim [maj] `Inhib` [gen]
+        pvt  = "Pvt"  :<- Stim [gen,majE]
 
 -- adding retreat orders
 data Order = None | Charge | Retreat

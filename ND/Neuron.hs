@@ -28,9 +28,9 @@ data Kind = Act | Law
   deriving (Eq,Show)
 
 -- neuron
-data N a = forall t. NT t a => Name :< t a
+data N a = forall t. NT t a => Name :<- t a
 
-infix 5 :<
+infix 5 :<-
 
 -- neuron type
 class NT t a where
@@ -58,15 +58,15 @@ fillWith :: String -> [Attr]
 fillWith c = [("style","filled"),("fillcolor",c)]
 
 instance NT N a where
-  fire  (_ :< t) = fire t
-  kind  (_ :< t) = kind t
-  preds (_ :< t) = preds t
-  nodeAttrs (_ :< t) = nodeAttrs t
-  edgeAttrs (_ :< t) = edgeAttrs t
+  fire  (_ :<- t) = fire t
+  kind  (_ :<- t) = kind t
+  preds (_ :<- t) = preds t
+  nodeAttrs (_ :<- t) = nodeAttrs t
+  edgeAttrs (_ :<- t) = edgeAttrs t
 
 -- neuron name
 name :: N a -> Name
-name (n :< _) = n
+name (n :<- _) = n
 
 -- is the neuron named n?
 isNamed :: Name -> N a -> Bool

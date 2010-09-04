@@ -54,6 +54,10 @@ diagram = D . G
 graph :: D a -> G a
 graph (D g _) = g
 
+-- change the inputs of a diagram
+withInputs :: D a -> [a] -> D a
+withInputs = D . graph
+
 -- input values to a diagram
 inVals :: D a -> [a]
 inVals (D _ as) = as

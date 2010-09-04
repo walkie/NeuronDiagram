@@ -106,6 +106,6 @@ sepBy s = concat . intersperse s . map show . toList
 -- other relation nestings.  Uncomment the parens functions for a more
 -- explicit representation.
 instance Show a => Show (Con a) where
-  show = {- parens . -} sepBy "^"
+  show = {- parens . -} sepBy "&"
 instance Show a => Show (Dis a) where
-  show = {- parens . -} sepBy " v "
+  show = {- parens . -} sepBy " | "
