@@ -82,10 +82,10 @@ instance Desc Stim Order where
   -- rest same as Stim Bool
   preds (Stim ps) = ps
   
-instance Desc t Order => Desc (Inhib t) Order where
-  fire (Inhib t is) = fireDec t (length is) override isOverridden
+instance Desc d Order => Desc (Inhib d) Order where
+  fire (Inhib d is) = fireDec d (length is) override isOverridden
   -- rest same as Inhib Bool
-  kind  (Inhib t _ ) = kind t
-  preds (Inhib t is) = preds t ++ is
-  edgeAttrs (Inhib t is) = edgeAttrs t ++ replicate (length is) (arrowhead "dot")
-  nodeAttrs (Inhib t _ ) = nodeAttrs t
+  kind  (Inhib d _ ) = kind d
+  preds (Inhib d is) = preds d ++ is
+  edgeAttrs (Inhib d is) = edgeAttrs d ++ replicate (length is) (arrowhead "dot")
+  nodeAttrs (Inhib d _ ) = nodeAttrs d
