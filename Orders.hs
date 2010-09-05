@@ -16,6 +16,8 @@ major = diagram [pvt] [False,True]
         maj = "Maj" :<- Input
         pvt = "Pvt" :<- Stim [gen,maj]
 
+major' = diagram ["Pvt" :<- Stim ["Gen" :<- Input, "Maj" :<- Input]] [False,True]
+
 -- same as "orders", but both officers issue the order
 both = major `withInputs` [True,True]
 

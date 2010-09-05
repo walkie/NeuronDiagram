@@ -5,6 +5,7 @@ import Data.List (findIndex)
 
 import ND.Neuron
 import ND.Diagram
+import ND.Arg
 
 
 ----------------------
@@ -52,5 +53,28 @@ evalSink :: G a -> Name -> [a] -> a
 evalSink g n as = maybe err (eval g as !!) $ findIndex (isNamed n) (sinks g)
   where err = error $ "evalSink: No sink named: " ++ n
 
-fireSem :: NV a => G a -> [([a],[a])]
-fireSem g = [(as, eval g as) | as <- allInsFor g]
+-- state of any neuron in the graph
+stateOf :: NV a => D a -> Name -> a
+stateOf d = evalN d . findNeuron (graph d)
+
+-- construct an argument given a diagram and a neuron name
+arg :: D a -> Name -> Arg a
+arg d n = Arg n $ evalN d (findNeuron (graph d) n)
+
+
+-----------------------------
+-- Explicit Representation --
+-----------------------------
+
+-- explicit representation of the firing semantics
+newtype Effects a = Effects [(Rec a, Rec a)]
+
+-- firing semantics
+effects :: NV a => G a -> Effects a
+effects g = Effects [(r, evalRec r) | r <- allRecs g]
+  where snks = map name (sinks g)
+        evalRec r = zipWith Arg snks $ eval g (map argVal r)
+
+instance NV a => Show (Effects a) where
+  show (Effects es) = unlines (map row es)
+    where row (i,o) = show i ++ " -> " ++ show o

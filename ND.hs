@@ -1,5 +1,6 @@
 
 module ND (
+  module ND.Arg,
   module ND.BoolRel,
   module ND.Cause,
   module ND.Diagram,
@@ -9,6 +10,7 @@ module ND (
   module ND.NeuronTypes,
 ) where
 
+import ND.Arg
 import ND.BoolRel
 import ND.Cause
 import ND.Diagram

@@ -8,50 +8,9 @@ import Data.List
 
 import ND.Neuron
 import ND.Diagram
+import ND.Arg
 import ND.Fire
 import ND.BoolRel
-
-
-----------------------
--- Argument Records --
-----------------------
-
--- argument
-data Arg a = Arg Name a
-  deriving (Eq,Ord)
-
--- argument record
-type Rec a = [Arg a]
-
--- alteration of an argument record
-type Alt = [Name]
-
--- argument name
-argName :: Arg a -> Name
-argName (Arg n _) = n
-
--- argument value
-argVal :: Arg a -> a
-argVal (Arg _ a) = a
-
--- create an argument record for a graph
-rec :: G a -> [a] -> Rec a
-rec = zipWith Arg . map name . inputs
-
--- all permutations of an argument record
-perms :: NV a => Rec a -> [Rec a]
-perms r = delete r $ map (zipWith Arg (map argName r)) (allIns (length r))
-
--- isolate an alteration given the original argument record and a permutation
-alt :: Eq a => Rec a -> Rec a -> Alt
-alt o = map argName . filter (flip notElem o)
-
--- construct an argument given a diagram and a neuron name
-arg :: D a -> Name -> Arg a
-arg d n = Arg n $ evalN d (findNeuron (graph d) n)
-
-instance NV a => Show (Arg a) where
-  show (Arg n a) = n ++ ":" ++ show a--showVal a
 
 
 ------------------------------
