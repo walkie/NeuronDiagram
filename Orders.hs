@@ -29,6 +29,11 @@ trump = diagram [pvt] [True,True]
         majE = "MajE" :<- Stim [maj] `Inhib` [gen]
         pvt  = "Pvt"  :<- Stim [gen,majE]
 
+orcs = diagram [dead] [True]
+  where orcs = "Orcs" :<- Input       `IsKind` Law
+        gen  = "Gen"  :<- Stim [orcs] `IsKind` Act
+        dead = "Dead" :<- Stim [orcs] `Inhib`  [gen]
+
 -- incorporate retreat orders
 -- exactly the same as charge2 except the type annotation!
 retreat = diagram [pvt] [Charge,Retreat]

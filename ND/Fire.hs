@@ -68,6 +68,7 @@ arg d n = Arg n $ evalN d (findNeuron (graph d) n)
 
 -- explicit representation of the firing semantics
 newtype Effects a = Effects [(Rec a, Rec a)]
+  deriving Eq
 
 -- firing semantics
 effects :: NV a => G a -> Effects a
