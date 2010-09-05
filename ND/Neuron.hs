@@ -28,12 +28,12 @@ data Kind = Act | Law
   deriving (Eq,Show)
 
 -- neuron
-data N a = forall t. NT t a => Name :<- t a
+data N a = forall t. Desc t a => Name :<- t a
 
 infix 5 :<-
 
 -- neuron type
-class NT t a where
+class Desc t a where
   fire  :: t a -> Fire a -- firing function
   preds :: t a -> [N a]  -- immediate predecessors
   kind  :: t a -> Kind   -- neuron kind
@@ -57,7 +57,7 @@ class (Bounded a, Enum a, Eq a, Show a) => NV a where
 fillWith :: String -> [Attr]
 fillWith c = [("style","filled"),("fillcolor",c)]
 
-instance NT N a where
+instance Desc N a where
   fire  (_ :<- t) = fire t
   kind  (_ :<- t) = kind t
   preds (_ :<- t) = preds t

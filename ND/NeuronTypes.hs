@@ -17,7 +17,7 @@ import ND.Neuron
 data Input a = Input
   deriving (Eq,Show)
 
-instance NT Input a where
+instance Desc Input a where
   fire _ = In
   kind _ = Act
 
@@ -26,7 +26,7 @@ instance NT Input a where
 data Const a = Const a
   deriving (Eq,Show)
 
-instance NT Const a where
+instance Desc Const a where
   fire (Const a) = Fire (const a)
 
 
@@ -34,7 +34,7 @@ instance NT Const a where
 data Stim a = Stim [N a]
   deriving (Eq,Show)
 
-instance NT Stim Bool where
+instance Desc Stim Bool where
   fire  _         = Fire or
   preds (Stim ps) = ps
 
@@ -42,7 +42,7 @@ instance NT Stim Bool where
 -- xor neuron
 data XOR a = XOR [N a]
 
-instance NT XOR Bool where
+instance Desc XOR Bool where
   fire  _        = Fire ((==1) . count)
   preds (XOR ps) = ps
   nodeAttrs _    = [("shape","diamond")]
@@ -51,7 +51,7 @@ instance NT XOR Bool where
 -- thick neurons
 data Thick a = Thick Int [N a]
 
-instance NT Thick Bool where
+instance Desc Thick Bool where
   fire  (Thick n _)  = Fire ((>=n) . count)
   preds (Thick _ ps) = ps
   nodeAttrs _        = [("penwidth","3")]
@@ -70,7 +70,7 @@ count = length . filter id
 data IsKind t a = IsKind (t a) Kind
   deriving (Eq,Show)
 
-instance NT t a => NT (IsKind t) a where
+instance Desc t a => Desc (IsKind t) a where
   fire  (IsKind t _) = fire t
   kind  (IsKind _ k) = k
   preds (IsKind t _) = preds t
@@ -81,7 +81,7 @@ instance NT t a => NT (IsKind t) a where
 data Inhib t a = Inhib (t a) [N a]
   deriving (Eq,Show)
 
-instance NT t Bool => NT (Inhib t) Bool where
+instance Desc t Bool => Desc (Inhib t) Bool where
   fire  (Inhib t is) = Fire $ fireD t (length is) (&&) (all not)
   kind  (Inhib t _ ) = kind t
   preds (Inhib t is) = preds t ++ is
@@ -95,7 +95,7 @@ instance NT t Bool => NT (Inhib t) Bool where
 --   c: function for combining results of (fire t) and g
 --   d: function to execute on this decorator's inputs
 --   as: input to firing function
-fireD :: NT t a => t a -> Int -> (a -> b -> a) -> ([a] -> b) -> [a] -> a
+fireD :: Desc t a => t a -> Int -> (a -> b -> a) -> ([a] -> b) -> [a] -> a
 fireD t n c d as = case fire t of
                      Fire f -> c (f bs) (d (take n cs))
                      _ -> error "Cannot modify input neuron function!"

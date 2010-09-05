@@ -34,8 +34,13 @@ twoDocs = diagram [dead] [False,False]
         sick = "Sick" :<- Const True
         dead = "Dead" :<- Stim [sick] `Inhib` [cure] 
 
+boulder = diagram [dead] [True]
+  where boulder = "Boulder" :<- Input
+        duck    = "Duck"    :<- Stim [boulder] `IsKind` Act
+        dead    = "Dead"    :<- Stim [boulder] `Inhib` [duck]
+
 -- boulder problem (transitivity)
-boulder = diagram [live] [True]
+boulder' = diagram [live] [True]
   where boulder = "Boulder" :<- Input
         health  = "Health"  :<- Const True
         duck    = "Duck"    :<- Stim [boulder] `IsKind` Act

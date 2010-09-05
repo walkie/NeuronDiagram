@@ -29,10 +29,15 @@ trump = diagram [pvt] [True,True]
         majE = "MajE" :<- Stim [maj] `Inhib` [gen]
         pvt  = "Pvt"  :<- Stim [gen,majE]
 
-orcs = diagram [dead] [True]
-  where orcs = "Orcs" :<- Input       `IsKind` Law
-        gen  = "Gen"  :<- Stim [orcs] `IsKind` Act
+orcs' = diagram [dead] [True]
+  where orcs = "Orcs" :<- Input
+        gen  = "Gen"  :<- Stim [orcs]
         dead = "Dead" :<- Stim [orcs] `Inhib`  [gen]
+
+orcs = diagram [dead] [True]
+  where orcs = "Orcs" :<- Input
+        gen  = "Gen"  :<- Stim [orcs] `IsKind` Act
+        dead = "Dead" :<- Stim [orcs] `Inhib` [gen]
 
 -- incorporate retreat orders
 -- exactly the same as charge2 except the type annotation!
@@ -72,12 +77,12 @@ instance NV Order where
   valAttrs Charge  = fillWith "palegreen"
   valAttrs Retreat = fillWith "pink"
   
-instance NT Stim Order where
+instance Desc Stim Order where
   fire _ = Fire process
   -- rest same as Stim Bool
   preds (Stim ps) = ps
   
-instance NT t Order => NT (Inhib t) Order where
+instance Desc t Order => Desc (Inhib t) Order where
   fire (Inhib t is) = Fire $ fireD t (length is) override isOverridden
   -- rest same as Inhib Bool
   kind  (Inhib t _ ) = kind t
