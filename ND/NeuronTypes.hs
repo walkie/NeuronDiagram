@@ -67,38 +67,38 @@ count = length . filter id
 -----------------------
 
 -- explicit kind decorator
-data IsKind t a = IsKind (t a) Kind
+data IsKind d a = IsKind (d a) Kind
   deriving (Eq,Show)
 
-instance Desc t a => Desc (IsKind t) a where
-  fire  (IsKind t _) = fire t
+instance Desc d a => Desc (IsKind d) a where
+  fire  (IsKind d _) = fire d
   kind  (IsKind _ k) = k
-  preds (IsKind t _) = preds t
-  edgeAttrs (IsKind t _) = edgeAttrs t
-  nodeAttrs (IsKind t _) = nodeAttrs t
+  preds (IsKind d _) = preds d
+  edgeAttrs (IsKind d _) = edgeAttrs d
+  nodeAttrs (IsKind d _) = nodeAttrs d
 
 -- inhibiting edges decorator
-data Inhib t a = Inhib (t a) [N a]
+data Inhib d a = Inhib (d a) [N a]
   deriving (Eq,Show)
 
-instance Desc t Bool => Desc (Inhib t) Bool where
-  fire  (Inhib t is) = fireDec t (length is) (&&) (all not)
-  kind  (Inhib t _ ) = kind t
-  preds (Inhib t is) = preds t ++ is
-  edgeAttrs (Inhib t is) = edgeAttrs t ++ replicate (length is) (arrowhead "dot")
-  nodeAttrs (Inhib t _ ) = nodeAttrs t
+instance Desc d Bool => Desc (Inhib d) Bool where
+  fire  (Inhib d is) = fireDec d (length is) (&&) (all not)
+  kind  (Inhib d _ ) = kind d
+  preds (Inhib d is) = preds d ++ is
+  edgeAttrs (Inhib d is) = edgeAttrs d ++ replicate (length is) (arrowhead "dot")
+  nodeAttrs (Inhib d _ ) = nodeAttrs d
 
 
 -- helper function for defining decorators that modify the firing function
---   t: neuron type being decorated
+--   nd: neuron description being decorated
 --   n: number of inputs this neuron consumes
 --   c: function for combining results of (fire t) and g
 --   d: function to execute on this decorator's inputs
 --   as: input to firing function
-fireDec :: Desc t a => t a -> Int -> (a -> b -> a) -> ([a] -> b) -> Fire a
-fireDec t n c d = Fire $ \as -> 
-    let (bs,cs) = splitAt (length (preds t)) as in
-    case fire t of
+fireDec :: Desc d a => d a -> Int -> (a -> b -> a) -> ([a] -> b) -> Fire a
+fireDec nd n c d = Fire $ \as -> 
+    let (bs,cs) = splitAt (length (preds nd)) as in
+    case fire nd of
        Fire f -> c (f bs) (d (take n cs))
        _ -> error "Cannot modify input neuron function!"
 

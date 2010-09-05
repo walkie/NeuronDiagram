@@ -28,17 +28,17 @@ data Kind = Act | Law
   deriving (Eq,Show)
 
 -- neuron
-data N a = forall t. Desc t a => Name :<- t a
+data N a = forall d. Desc d a => Name :<- d a
 
 infix 5 :<-
 
 -- neuron type
-class Desc t a where
-  fire  :: t a -> Fire a -- firing function
-  preds :: t a -> [N a]  -- immediate predecessors
-  kind  :: t a -> Kind   -- neuron kind
-  nodeAttrs :: t a -> [Attr]   -- graphviz node attributes
-  edgeAttrs :: t a -> [[Attr]] -- graphviz edge attributes
+class Desc d a where
+  fire  :: d a -> Fire a -- firing function
+  preds :: d a -> [N a]  -- immediate predecessors
+  kind  :: d a -> Kind   -- neuron kind
+  nodeAttrs :: d a -> [Attr]   -- graphviz node attributes
+  edgeAttrs :: d a -> [[Attr]] -- graphviz edge attributes
   
   -- defaults
   kind _  = Law
@@ -62,11 +62,11 @@ arrowhead :: String -> [Attr]
 arrowhead s = [("arrowhead",s)]
 
 instance Desc N a where
-  fire  (_ :<- t) = fire t
-  kind  (_ :<- t) = kind t
-  preds (_ :<- t) = preds t
-  nodeAttrs (_ :<- t) = nodeAttrs t
-  edgeAttrs (_ :<- t) = edgeAttrs t
+  fire  (_ :<- d) = fire d
+  kind  (_ :<- d) = kind d
+  preds (_ :<- d) = preds d
+  nodeAttrs (_ :<- d) = nodeAttrs d
+  edgeAttrs (_ :<- d) = edgeAttrs d
 
 -- neuron name
 name :: N a -> Name
