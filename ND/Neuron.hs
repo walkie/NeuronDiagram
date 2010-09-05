@@ -57,6 +57,10 @@ class (Bounded a, Enum a, Eq a, Show a) => NV a where
 fillWith :: String -> [Attr]
 fillWith c = [("style","filled"),("fillcolor",c)]
 
+-- helper function for constructing arrowhead attributes
+arrowhead :: String -> [Attr]
+arrowhead s = [("arrowhead",s)]
+
 instance Desc N a where
   fire  (_ :<- t) = fire t
   kind  (_ :<- t) = kind t

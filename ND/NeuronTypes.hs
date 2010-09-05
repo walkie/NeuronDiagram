@@ -82,11 +82,11 @@ data Inhib t a = Inhib (t a) [N a]
   deriving (Eq,Show)
 
 instance Desc t Bool => Desc (Inhib t) Bool where
-  fire  (Inhib t is) = Fire $ fireD t (length is) (&&) (all not)
+  fire  (Inhib t is) = fireDec t (length is) (&&) (all not)
   kind  (Inhib t _ ) = kind t
   preds (Inhib t is) = preds t ++ is
-  edgeAttrs (Inhib t _) = edgeAttrs t ++ [[("arrowhead","dot")]]
-  nodeAttrs (Inhib t _) = nodeAttrs t
+  edgeAttrs (Inhib t is) = edgeAttrs t ++ replicate (length is) (arrowhead "dot")
+  nodeAttrs (Inhib t _ ) = nodeAttrs t
 
 
 -- helper function for defining decorators that modify the firing function
@@ -95,11 +95,12 @@ instance Desc t Bool => Desc (Inhib t) Bool where
 --   c: function for combining results of (fire t) and g
 --   d: function to execute on this decorator's inputs
 --   as: input to firing function
-fireD :: Desc t a => t a -> Int -> (a -> b -> a) -> ([a] -> b) -> [a] -> a
-fireD t n c d as = case fire t of
-                     Fire f -> c (f bs) (d (take n cs))
-                     _ -> error "Cannot modify input neuron function!"
-  where (bs,cs) = splitAt (length (preds t)) as
+fireDec :: Desc t a => t a -> Int -> (a -> b -> a) -> ([a] -> b) -> Fire a
+fireDec t n c d = Fire $ \as -> 
+    let (bs,cs) = splitAt (length (preds t)) as in
+    case fire t of
+       Fire f -> c (f bs) (d (take n cs))
+       _ -> error "Cannot modify input neuron function!"
 
 
 ----------------------------
