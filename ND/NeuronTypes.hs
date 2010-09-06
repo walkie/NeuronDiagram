@@ -17,9 +17,7 @@ import ND.Neuron
 data Input a = Input
   deriving (Eq,Show)
 
-instance Desc Input a where
-  fire _ = In
-  kind _ = Act
+instance Desc Input a where { fire _ = In; kind _ = Act }
 
 
 -- constant neurons
@@ -45,7 +43,7 @@ data XOR a = XOR [N a]
 instance Desc XOR Bool where
   fire  _        = Fire ((==1) . count)
   preds (XOR ps) = ps
-  nodeAttrs _    = [("shape","diamond")]
+  nodeAttrs _    = shape "diamond"
 
 
 -- thick neurons

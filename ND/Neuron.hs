@@ -61,6 +61,10 @@ fillWith c = [("style","filled"),("fillcolor",c)]
 arrowhead :: String -> [Attr]
 arrowhead s = [("arrowhead",s)]
 
+-- helper function for constructing shape attributes
+shape :: String -> [Attr]
+shape s = [("shape",s)]
+
 instance Desc N a where
   fire  (_ :<- d) = fire d
   kind  (_ :<- d) = kind d

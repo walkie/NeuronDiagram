@@ -4,6 +4,9 @@ module Orders where
 
 import ND
 
+import Data.List (find)
+import Data.Maybe (fromMaybe)
+
 --------------------
 -- Orders Example --
 --------------------
@@ -47,19 +50,17 @@ retreat = diagram [pvt] [Charge,Retreat]
         majE = "MajE" :<- Stim [maj] `Inhib` [gen]
         pvt  = "Pvt"  :<- Stim [gen,majE]
 
+process = diagram [pvt] [Charge,Retreat]
+  where gen = "Gen" :<- Input
+        maj = "Maj" :<- Input
+        pvt = "Pvt" :<- Process [gen,maj]
+
 -- adding retreat orders
 data Order = None | Charge | Retreat
   deriving (Bounded,Enum,Eq,Ord,Show)
 
 -- for Stim
 -- if all orders agree (same orders or None), execute that Order, otherwise do None
-process :: [Order] -> Order
-process os | all (==None) os      = None
-           | allNoneOr Charge  os = Charge
-           | allNoneOr Retreat os = Retreat
-           | otherwise            = None
-  where allNoneOr o = all (flip elem [None,o])
-
 -- for Inhib
 -- if any order is not none, order is overridden
 isOverridden :: [Order] -> Bool
@@ -71,6 +72,14 @@ override :: Order -> Bool -> Order
 override _ True = None
 override o _    = o
 
+data Process a = Process [N a]
+  deriving (Eq,Show)
+
+instance Desc Process Order where
+  fire _ = Fire (\os -> fromMaybe None (find (/=None) os))
+  preds (Process ps) = ps
+  nodeAttrs _ = shape "box"
+
 instance NV Order where
   --showVal  = show
   valAttrs None    = []
@@ -79,6 +88,11 @@ instance NV Order where
   
 instance Desc Stim Order where
   fire _ = Fire process
+    where allNoneOr o = all (flip elem [None,o])
+          process os | all (==None) os      = None
+                     | allNoneOr Charge  os = Charge
+                     | allNoneOr Retreat os = Retreat
+                     | otherwise            = None
   -- rest same as Stim Bool
   preds (Stim ps) = ps
   
