@@ -76,7 +76,7 @@ data Process a = Process [N a]
   deriving (Eq,Show)
 
 instance Desc Process Order where
-  fire _ = Fire (\os -> fromMaybe None (find (/=None) os))
+  fire _ = Fire (fromMaybe None . find (/= None))
   preds (Process ps) = ps
   nodeAttrs _ = shape "box"
 
