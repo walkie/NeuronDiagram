@@ -28,30 +28,30 @@ type Cause a = DC (Arg a)
 type BCFD = Dis Name
 
 -- get the basic counterfactual dependencies of a function, given some input
-basicDeps :: NV a => ([a] -> a) -> Rec a -> BCFD
-basicDeps f = onList (concatMap singles) . deps f
+basicCfd :: NV a => ([a] -> a) -> Rec a -> BCFD
+basicCfd f = onList (concatMap singles) . cfd f
   where singles (Con [a]) = [a]
         singles _         = []
 -}
 
 -- get the counterfactual dependencies of a function, given some input
-deps :: NV a => ([a] -> a) -> Rec a -> CFD
-deps f r = Dis [Con (alt r p) | p <- perms r, eval r /= eval p]
+cfd :: NV a => ([a] -> a) -> Rec a -> CFD
+cfd f r = Dis [Con (alt r p) | p <- perms r, eval r /= eval p]
   where eval = f . map argVal
 
 -- get the minimal counterfactual dependencies of a function, given some input
-minDeps :: NV a => ([a] -> a) -> Rec a -> CFD
-minDeps f = simplify2 . deps f
+minCfd :: NV a => ([a] -> a) -> Rec a -> CFD
+minCfd f = simplify2 . cfd f
 
 -- convert a CFD to a Cause in the context of some diagram
-depsToCause :: D a -> CFD -> Cause a
-depsToCause d = dist . fromList2 . toList2 . fmap2 (arg d)
+cfdToCause :: D a -> CFD -> Cause a
+cfdToCause d = dist . fromList2 . toList2 . fmap2 (arg d)
 
 -- (structured) counterfactual causes of each sink in a diagram,
 -- in terms of inputs
 counter :: NV a => D a -> [Cause a]
 counter d@(D g i) = map cause (evals g)
-  where cause = depsToCause d . flip minDeps (rec g i)
+  where cause = cfdToCause d . flip minCfd (rec g i)
 
 -- basic (unstructured) counterfactual causes of each sink in a diagram,
 -- in terms of inputs
@@ -66,8 +66,8 @@ basic = filter ((==1) . length . toList) . counter
 -- immediate (local) counterfactual cause of a neuron
 local :: NV a => D a -> N a -> Cause a
 local d n | isAct n   = fromList2 [[arg d (name n)]] -- actions are their own cause
-          | otherwise = depsToCause d (law (fire n))  -- laws are determined through CF reasoning
-  where law (Fire f) = minDeps f [arg d (name p) | p <- preds n]
+          | otherwise = cfdToCause d (law (fire n))  -- laws are determined through CF reasoning
+  where law (Fire f) = minCfd f [arg d (name p) | p <- preds n]
         law In       = fromList2 [[]]
 
 -- ultimate cause of a neuron by causal flow
