@@ -114,7 +114,7 @@ instance Enum a => Enum (Maybe a) where
   toEnum i = Just (toEnum (i-1))
   fromEnum Nothing  = 0
   fromEnum (Just a) = fromEnum a + 1
-  
+
 instance NV a => NV (Maybe a) where
   --showVal  (Just a) = showVal a
   --showVal  Nothing  = "N/A"
