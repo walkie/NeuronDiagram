@@ -25,13 +25,13 @@ findNeuron g n = case find (isNamed n) (neurons g) of
                    Just n  -> n
                    Nothing -> error $ "findNeuron: No neuron named: " ++ n
 
--- all sink neurons
-sinks :: G a -> [N a]
-sinks (G ns) = ns
+-- all terminal neurons
+terminals :: G a -> [N a]
+terminals (G ns) = ns
 
--- all source neurons
-sources :: G a -> [N a]
-sources = filter isEx . neurons
+-- all exogenous neurons
+exogenous :: G a -> [N a]
+exogenous = filter isEx . neurons
 
 -- all input neurons
 inputs :: G a -> [N a]
@@ -66,13 +66,13 @@ inVals (D _ as) = as
 neuronsD :: D a -> [N a]
 neuronsD = neurons . graph
 
--- all sinks in a diagram
-sinksD :: D a -> [N a]
-sinksD = sinks . graph
+-- all terminals in a diagram
+terminalsD :: D a -> [N a]
+terminalsD = terminals . graph
 
--- all sources in a diagram
-sourcesD :: D a -> [N a]
-sourcesD = sources . graph
+-- all exogenous neurons in a diagram
+exogenousD :: D a -> [N a]
+exogenousD = exogenous . graph
 
 -- all neuron values
 allVals :: NV a => [a]
@@ -87,5 +87,5 @@ allInsFor :: NV a => G a -> [[a]]
 allInsFor = allIns . length . inputs
 
 -- all diagrams for a given graph
-allDs :: NV a => G a -> [D a]
-allDs g = map (D g) (allInsFor g)
+allDiagrams :: NV a => G a -> [D a]
+allDiagrams g = map (D g) (allInsFor g)

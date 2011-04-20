@@ -35,9 +35,9 @@ evalN' m n = case fire n of
                In     -> look m n
                Fire f -> f $ map (evalN' m) (preds n)
 
--- determine the firing state of all sinks of a neuron diagram
+-- determine the firing state of all terminals of a neuron diagram
 evalD :: D a -> [a]
-evalD d = map (evalN d) (sinksD d)
+evalD d = map (evalN d) (terminalsD d)
 
 -- firing function for a graph
 eval :: G a -> [a] -> [a]
@@ -45,12 +45,12 @@ eval g = evalD . D g
 
 -- firing function for each sink in a graph
 evals :: G a -> [[a] -> a]
-evals g = map e [0 .. length (sinks g) - 1]
+evals g = map e [0 .. length (terminals g) - 1]
   where e i as = eval g as !! i
 
 -- firing function for a particular sink
 evalSink :: G a -> Name -> [a] -> a
-evalSink g n as = maybe err (eval g as !!) $ findIndex (isNamed n) (sinks g)
+evalSink g n as = maybe err (eval g as !!) $ findIndex (isNamed n) (terminals g)
   where err = error $ "evalSink: No sink named: " ++ n
 
 -- state of any neuron in the graph
@@ -73,7 +73,7 @@ newtype Effects a = Effects [(Rec a, Rec a)]
 -- firing semantics
 effects :: NV a => G a -> Effects a
 effects g = Effects [(r, evalRec r) | r <- allRecs g]
-  where snks = map name (sinks g)
+  where snks = map name (terminals g)
         evalRec r = zipWith Arg snks $ eval g (map argVal r)
 
 instance NV a => Show (Effects a) where

@@ -13,26 +13,45 @@ import ND.Fire
 import ND.BoolRel
 
 
-------------------------------
--- Counterfactual Reasoning --
-------------------------------
+------------------------------------
+-- Basic Counterfactual Reasoning --
+------------------------------------
+
+-- basic counterfactual dependency
+type BCFD = Dis Name
+
+type BasicCause a = Con (Arg a)
+
+-- get the basic counterfactual dependencies of a function, given some input
+bcfd :: NV a => ([a] -> a) -> Rec a -> BCFD
+bcfd f = onList (concatMap singles) . cfd f
+  where singles (Con [a]) = [a]
+        singles _         = []
+
+-- get the minimal basic counterfactual dependencies of a function, given some input
+minBcfd :: NV a => ([a] -> a) -> Rec a -> BCFD
+minBcfd f = simplify . bcfd f
+
+-- convert a BCFD to a BasicCause in the context of some diagram
+bcfdToCause :: D a -> BCFD -> BasicCause a
+bcfdToCause d = fromList . toList . fmap (arg d)
+
+-- basic (unstructured) counterfactual causes of each sink in a diagram,
+-- in terms of inputs
+basic :: NV a => D a -> [BasicCause a]
+basic d@(D g i) = map cause (evals g)
+  where cause = bcfdToCause d . flip minBcfd (rec g i)
+
+
+-----------------------------------------
+-- Structured Counterfactual Reasoning --
+-----------------------------------------
 
 -- structured counterfactual dependency
 type CFD = DC Name
 
 -- the causes of a single neuron's value
 type Cause a = DC (Arg a)
-
-{-
--- basic counterfactual dependency
-type BCFD = Dis Name
-
--- get the basic counterfactual dependencies of a function, given some input
-basicCfd :: NV a => ([a] -> a) -> Rec a -> BCFD
-basicCfd f = onList (concatMap singles) . cfd f
-  where singles (Con [a]) = [a]
-        singles _         = []
--}
 
 -- get the counterfactual dependencies of a function, given some input
 cfd :: NV a => ([a] -> a) -> Rec a -> CFD
@@ -53,10 +72,10 @@ counter :: NV a => D a -> [Cause a]
 counter d@(D g i) = map cause (evals g)
   where cause = cfdToCause d . flip minCfd (rec g i)
 
--- basic (unstructured) counterfactual causes of each sink in a diagram,
--- in terms of inputs
-basic :: NV a => D a -> [Cause a]
-basic = filter ((==1) . length . toList) . counter
+-- alternative implementation of basic counterfactual causes based on
+-- structured counterfactual causes
+basic' :: NV a => D a -> [Cause a]
+basic' = filter ((==1) . length . toList) . counter
 
 
 -----------------
@@ -78,9 +97,9 @@ flow d n = (simplify2 . flatten) (fmap2 expand (local d n))
 
 -- causal semantics
 csem :: (NV a, Ord a) => D a -> [Cause a]
-csem d = map (flow d) (sinksD d)
+csem d = map (flow d) (terminalsD d)
 
 -- print the causal semantics in a nice way
 causes :: (NV a, Ord a) => D a -> IO ()
-causes d = mapM_ putStr $ zipWith cause (csem d) (sinksD d)
+causes d = mapM_ putStr $ zipWith cause (csem d) (terminalsD d)
   where cause c n = show c ++ " ==> " ++ show (Arg (name n) (evalN d n)) ++ "\n"
