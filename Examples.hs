@@ -57,5 +57,12 @@ assassin = diagram [live] [True]
         toxin    = "Toxin"    :<- XOR  [poison,antidote]
         live     = "Live"     :<- Stim [health] `Inhib` [toxin]
 
+poison = diagram [dead] [True,False,False]
+  where poison   = "Poison"   :<- Input
+        docA     = "A"        :<- Input -- Stim [poison] `IsKind` Act
+        docB     = "B"        :<- Input -- Stim [poison] `IsKind` Act
+        antidote = "Antidote" :<- Thick 2 [docA,docB]
+        dead     = "Dead"     :<- XOR [poison,antidote]
+
 -- one liner graph test...
 test = "Test" :<- Const True `Inhib` ["Thick" :<- Thick 2 ["A":<-Input,"B":<-Input]]

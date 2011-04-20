@@ -14,23 +14,30 @@ import Data.Maybe (fromMaybe)
 -- based on example beginning on SE p. 874
 
 -- private will charge if either superior orders him to
-major = diagram [pvt] [False,True]
+majorOrders = diagram [pvt] [False,True]
   where gen = "Gen" :<- Input
         maj = "Maj" :<- Input
         pvt = "Pvt" :<- Stim [gen,maj]
 
-major' = diagram ["Pvt" :<- Stim ["Gen" :<- Input, "Maj" :<- Input]] [False,True]
+majorOrders' = diagram ["Pvt" :<- Stim ["Gen" :<- Input, "Maj" :<- Input]] [False,True]
 
 -- same as "orders", but both officers issue the order
-both = major `withInputs` [True,True]
+bothOrder = majorOrders `withInputs` [True,True]
 
 -- if given, general's charge order trumps major's charge order
 -- same firing semantics, but different causal semantics
-trump = diagram [pvt] [True,True]
+trump :: (Desc Stim a, Desc (Inhib Stim) a) => G a
+trump = G [pvt]
   where gen  = "Gen"  :<- Input
         maj  = "Maj"  :<- Input
         majE = "MajE" :<- Stim [maj] `Inhib` [gen]
         pvt  = "Pvt"  :<- Stim [gen,majE]
+
+-- with boolean values
+trumpBool = D trump [True,True]
+
+-- incorporate retreat orders
+trumpOrder = D trump [Charge,Retreat]
 
 orcs' = diagram [dead] [True]
   where orcs = "Orcs" :<- Input
@@ -41,14 +48,6 @@ orcs = diagram [dead] [True]
   where orcs = "Orcs" :<- Input
         gen  = "Gen"  :<- Stim [orcs] `IsKind` Act
         dead = "Dead" :<- Stim [orcs] `Inhib` [gen]
-
--- incorporate retreat orders
--- exactly the same as charge2 except the type annotation!
-retreat = diagram [pvt] [Charge,Retreat]
-  where gen  = "Gen"  :<- Input
-        maj  = "Maj"  :<- Input
-        majE = "MajE" :<- Stim [maj] `Inhib` [gen]
-        pvt  = "Pvt"  :<- Stim [gen,majE]
 
 process = diagram [pvt] [Charge,Retreat]
   where gen = "Gen" :<- Input
