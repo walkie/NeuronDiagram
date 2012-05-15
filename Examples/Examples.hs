@@ -1,5 +1,5 @@
 
-module Examples where
+module Examples.Examples where
 
 import ND
 

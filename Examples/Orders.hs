@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleContexts, MultiParamTypeClasses #-}
 
-module Orders where
+module Examples.Orders where
 
 import ND
 
